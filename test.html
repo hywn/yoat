@@ -1,0 +1,68 @@
+<audio id="player" controls></audio>
+
+<div id="song_list"></div>
+
+<style>
+
+table { border-collapse: collapse }
+th, td { border: 1px solid; padding: 0.2em }
+
+</style>
+
+<script>
+const PLAYER        = document.querySelector('#player')
+const PLAYER_SOURCE = document.querySelector('#player_source')
+const SONG_LIST     = document.querySelector('#song_list')
+
+const YOAT_URL  = 'http://localhost:8080'
+const KEY_CACHE = 'yoat_cache_key'
+
+const cache     = JSON.parse(window.localStorage.getItem(KEY_CACHE) || '{}')
+
+
+const songs = ['-gLEizxGh_A']
+display(songs)
+
+
+async function get_audio(id)
+{
+	if(cache[id])
+		return cache[id]
+
+	const audio = await fetch(`${YOAT_URL}?id=${id}`)
+		.then(response => response.json())
+
+	cache[id] = audio;
+	save_cache()
+
+	return audio
+}
+
+async function display(ids)
+{
+	const audios = await Promise.all(ids.map(get_audio))
+
+	const table_content = audios.map(({ id, title, author, url}) =>
+		`<tr>
+			<td><a href="javascript:void(0)"onclick="play(this)">${id}</a></td>
+			<td>${title}</td>
+			<td>${author}</td>
+		</tr>`
+	).join('')
+
+	SONG_LIST.innerHTML = `<table><tr><th>id</th><th>title</th><th>author</th>${table_content}</table>`
+}
+
+async function play(element)
+{
+	const audio = await get_audio(element.innerHTML)
+
+	PLAYER.src = audio.url
+	PLAYER.play()
+}
+
+function save_cache()
+{
+	window.localStorage.setItem(KEY_CACHE, JSON.stringify(cache))
+}
+</script>
