@@ -1,21 +1,29 @@
-const http = require('http')
-const yoat = require('./yoat.js')
+import { serve } from 'https://deno.land/std/http/server.ts'
+import get_audio from './yoat.js'
 
-http.createServer((req, res) => {
+const port = 8080
 
-	const params = new URL(req.headers.host + req.url).searchParams
+const headers = new Headers({
+	'content-type': 'application/json',
+	'Access-Control-Allow-Origin': '*'
+})
 
-	res.setHeader('Access-Control-Allow-Origin', '*') // expecting to be accessed through file://.../test.html
-	res.setHeader('content-type', 'application/json')
+const server = serve({ port })
+console.log(`now serving on port ${port}`)
 
-	const id = params.get('id')
+for await (const req of server) {
+
+	const id = new URL('a://a' + req.url).searchParams.get('id')
 
 	if (!id) {
-		res.end('null')
-		return
+		req.respond({ headers, body: 'null' })
+		continue
 	}
 
-	yoat.get_audio(id)
-		.then(audio => res.end(JSON.stringify(audio)))
+	get_audio(id)
+		.then(audio => req.respond({
+			headers,
+			body: JSON.stringify(audio)
+		}))
 
-}).listen(8080)
+}

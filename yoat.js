@@ -1,18 +1,7 @@
-const https = require('https')
-
-module.exports.get_audio = get_audio
-
-// like fetch(url).then(res => res.text())
-function scurl(url)
+async function scurl(url)
 {
-	return new Promise((resolve, reject) => {
-		https.get(url, res => {
-			let got = ''
-
-			res.on('data', chunk => got += chunk)
-			res.on('end', () => resolve(got))
-		})
-	})
+	return fetch(url)
+		.then(res => res.text())
 }
 
 const YOUTUBE_URL = 'https://www.youtube.com'
@@ -25,7 +14,7 @@ const YOUTUBE_URL = 'https://www.youtube.com'
 **
 ** return a URL to the video's highest-bitrate audio stream
 */
-async function get_audio(video_id)
+export default async function get_audio(video_id)
 {
 	// get and extract info from 'player_response' (see get_player_response for more info)
 
