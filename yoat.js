@@ -1,9 +1,3 @@
-async function scurl(url)
-{
-	return fetch(url)
-		.then(res => res.text())
-}
-
 const YOUTUBE_URL = 'https://www.youtube.com'
 
 /***************/
@@ -86,9 +80,11 @@ export default async function get_audio(video_id)
 */
 async function get_player_response(id)
 {
-	const contents = await scurl(`${YOUTUBE_URL}/get_video_info?video_id=${id}`)
-
-	return JSON.parse(new URLSearchParams(contents).get('player_response'))
+	return JSON.parse(
+		await fetch(`${YOUTUBE_URL}/get_video_info?video_id=${id}`)
+			.then(res => res.formData())
+			.then(form => form.get('player_response'))
+	)
 }
 
 /******************************/
@@ -103,7 +99,8 @@ async function get_player_response(id)
 async function get_signature_function(video_id)
 {
 	// gets watch page
-	const watch_text = await scurl(`${YOUTUBE_URL}/watch?v=${video_id}`)
+	const watch_text = await fetch(`${YOUTUBE_URL}/watch?v=${video_id}`)
+		.then(r => r.text())
 
 	// finds base.js url
 	const relative_url = watch_text.match(/"(\/[^"]+\/base.js)"/)[1]
@@ -111,7 +108,8 @@ async function get_signature_function(video_id)
 		throw 'could not find base.js url in watch_text'
 
 	// gets base.js
-	const base_js_text = await scurl(YOUTUBE_URL + relative_url)
+	const base_js_text = await fetch(YOUTUBE_URL + relative_url)
+		.then(r => r.text())
 
 	// extracts signature function from base.js
 	return extract_signature_function(base_js_text)
