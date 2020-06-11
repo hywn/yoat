@@ -1,42 +1,37 @@
 <audio id="player" controls></audio>
-
 <div id="song_list"></div>
 
 <style>
-
 table { border-collapse: collapse }
 th, td { border: 1px solid; padding: 0.2em }
-
 </style>
 
 <script>
-const PLAYER        = document.querySelector('#player')
-const PLAYER_SOURCE = document.querySelector('#player_source')
-const SONG_LIST     = document.querySelector('#song_list')
-
+/*****************************************/
+/** getting, caching audios from server **/
+/*****************************************/
 const YOAT_URL  = 'http://localhost:8080'
 const KEY_CACHE = 'yoat_cache_key'
 
-const cache     = JSON.parse(window.localStorage.getItem(KEY_CACHE) || '{}')
-
-
-const songs = ['-gLEizxGh_A']
-display(songs)
-
-
-async function get_audio(id)
+const cache = JSON.parse(window.localStorage.getItem(KEY_CACHE) || '{}')
+function save_cache()
 {
-	if(cache[id])
-		return cache[id]
-
-	const audio = await fetch(`${YOAT_URL}?id=${id}`)
-		.then(response => response.json())
-
-	cache[id] = audio;
-	save_cache()
-
-	return audio
+	window.localStorage.setItem(KEY_CACHE, JSON.stringify(cache))
 }
+
+const get_audio = async (id) =>
+	cache[id]
+	||
+	fetch(`${YOAT_URL}?id=${id}`)
+		.then(r => r.json())
+		.then(a => cache[id] = a)
+		.finally(() => save_cache())
+
+/***********************************/
+/** displaying and playing audios **/
+/***********************************/
+const PLAYER        = document.querySelector('#player')
+const SONG_LIST     = document.querySelector('#song_list')
 
 async function display(ids)
 {
@@ -61,8 +56,8 @@ async function play(element)
 	PLAYER.play()
 }
 
-function save_cache()
-{
-	window.localStorage.setItem(KEY_CACHE, JSON.stringify(cache))
-}
+/*************/
+/** running **/
+/*************/
+display(['-gLEizxGh_A'])
 </script>
